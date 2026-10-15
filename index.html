@@ -1,0 +1,883 @@
+-webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Misi Peribahasa: Kembara Simpulan Bahasa</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 450px;
+            background: #1e293b;
+            border: 4px solid #38ef7d;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(56, 239, 125, 0.4);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Panel Overlay */
+        .ui-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .stat-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.85);
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 2px solid #38ef7d;
+            font-weight: bold;
+            font-size: 15px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+            backdrop-filter: blur(4px);
+        }
+
+        .audio-btn {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid #f8b500;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .audio-btn:hover {
+            transform: scale(1.05);
+            background: #f8b500;
+            color: #000;
+        }
+
+        /* Modals Overlay */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal h2 {
+            color: #f8b500;
+            margin-bottom: 8px;
+            font-size: 26px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .modal p {
+            font-size: 15px;
+            margin-bottom: 15px;
+            max-width: 600px;
+            line-height: 1.4;
+            color: #e2e8f0;
+        }
+
+        .emoji-clue {
+            font-size: 58px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 10px 30px;
+            border-radius: 16px;
+            border: 2px dashed #f8b500;
+            box-shadow: inset 0 0 10px rgba(248, 181, 0, 0.2);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 550px;
+            margin-top: 10px;
+        }
+
+        .option-btn {
+            background: #334155;
+            color: #fff;
+            border: 2px solid #38ef7d;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            background: #38ef7d;
+            color: #0f172a;
+            transform: scale(1.02);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: #0f172a;
+            border: none;
+            padding: 12px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.4);
+            margin-top: 15px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.6);
+        }
+
+        .feedback-card {
+            background: #1e293b;
+            border: 3px solid #f8b500;
+            border-radius: 14px;
+            padding: 20px;
+            max-width: 550px;
+            width: 90%;
+            box-shadow: 0 0 20px rgba(248, 181, 0, 0.3);
+        }
+
+        .meaning-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid #38ef7d;
+            margin: 12px 0;
+            text-align: left;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* Mobile Touch Controls */
+        #touch-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-top: 10px;
+            padding: 0 10px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid #ffffff;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+
+        .ctrl-btn:active {
+            background: rgba(56, 239, 125, 0.6);
+        }
+
+        @media (max-width: 820px) {
+            #game-container {
+                width: 100vw;
+                height: 56.25vw;
+                max-height: 70vh;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+            #touch-controls {
+                width: 100vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+
+        <!-- UI Bar -->
+        <div class="ui-panel">
+            <div class="stat-group">
+                <div class="stat-box" id="scoreDisplay">🪙 0</div>
+                <div class="stat-box" id="livesDisplay">❤️ 3</div>
+                <div class="stat-box" id="progressDisplay">📦 0/10</div>
+            </div>
+            <button class="audio-btn" id="audioToggleBtn" onclick="toggleAudio()">🔊 Muzik: ON</button>
+        </div>
+
+        <!-- Start Screen Modal -->
+        <div id="startModal" class="modal">
+            <h2>MISI PERIBAHASA</h2>
+            <p style="color: #f8b500; font-weight: bold;">Kembara Simpulan Bahasa (Tahun 4 - 6)</p>
+            <p>Bantu pengembara bahasa mengumpul syiling dan membuka <strong>Peti Khazanah Peribahasa</strong>! Padankan gabungan emoji dengan simpulan bahasa yang betul.</p>
+            <p style="font-size: 13px; color: #aaa;">Gunakan kekunci <strong>◄ ► / A D</strong> untuk bergerak dan <strong>▲ / W / Spacebar</strong> untuk melompat.</p>
+            <button class="btn-primary" onclick="startGame()">MULA MISI ➔</button>
+        </div>
+
+        <!-- Quiz Modal -->
+        <div id="quizModal" class="modal hidden">
+            <h3 style="color: #f8b500; font-size: 18px;">Peti Khazanah Peribahasa!</h3>
+            <p style="font-size: 14px; margin-bottom: 5px;">Apakah simpulan bahasa yang diwakili oleh gabungan emoji ini?</p>
+            
+            <div class="emoji-clue" id="quizEmoji">👶 🟡</div>
+
+            <div class="options-grid" id="optionsContainer"></div>
+        </div>
+
+        <!-- Feedback Modal -->
+        <div id="feedbackModal" class="modal hidden">
+            <div class="feedback-card">
+                <h3 id="feedbackTitle" style="font-size: 22px; margin-bottom: 8px;"></h3>
+                <p id="feedbackMessage" style="font-size: 15px; margin-bottom: 5px;"></p>
+                
+                <div class="meaning-box">
+                    <strong style="color: #f8b500;">📌 Maksud Peribahasa:</strong>
+                    <div id="meaningText" style="margin-top: 5px; color: #ffffff;"></div>
+                </div>
+
+                <button class="btn-primary" onclick="closeFeedback()">Teruskan Misi ➔</button>
+            </div>
+        </div>
+
+        <!-- Game Over / Victory Modal -->
+        <div id="endModal" class="modal hidden">
+            <h2 id="endTitle">TAHNIAH!</h2>
+            <p id="endMessage"></p>
+            <div class="stat-box" id="finalBadge" style="font-size: 20px; border-color: #f8b500; color: #f8b500; margin: 10px 0;">Pakar Peribahasa 🥇</div>
+            <div style="font-size: 16px; margin-bottom: 15px;" id="finalStats">Skor: 0 | Jawapan Betul: 0/10</div>
+            <button class="btn-primary" onclick="restartGame()">Main Semula 🔄</button>
+        </div>
+    </div>
+
+    <!-- On-screen Controls -->
+    <div id="touch-controls">
+        <div class="control-group">
+            <div class="ctrl-btn" id="btnLeft">◄</div>
+            <div class="ctrl-btn" id="btnRight">►</div>
+        </div>
+        <div class="control-group">
+            <div class="ctrl-btn" id="btnJump" style="width: 90px; border-radius: 30px;">LOMPAT</div>
+        </div>
+    </div>
+
+    <script>
+        // --- 10 SOALAN SPESIFIKASI ---
+        const questionsData = [
+            { emoji: "👶 🟡", answer: "Anak emas", options: ["Anak emas", "Anak angkat", "Anak kandung", "Buah hati"], meaning: "Anak kesayangan ibu bapa atau majikan." },
+            { emoji: "👣 🐔", answer: "Kaki ayam", options: ["Kaki bangku", "Kaki ayam", "Cakar ayam", "Kaki botol"], meaning: "Berjalan tanpa memakai kasut atau alas kaki." },
+            { emoji: "🧠 🧊", answer: "Otak cair", options: ["Otak cair", "Otak udang", "Kepala angin", "Kepala batu"], meaning: "Pintar atau sangat cepat memahami sesuatu." },
+            { emoji: "🐛 📖", answer: "Ulat buku", options: ["Makan angin", "Otak cair", "Ulat buku", "Kutu buku"], meaning: "Orang yang sangat rajin membaca buku." },
+            { emoji: "🖐️ 🎁", answer: "Buah tangan", options: ["Bekas tangan", "Buah tangan", "Panjang tangan", "Ringan tangan"], meaning: "Hadiah atau buah-buahan yang dibawa semasa melawat seseorang." },
+            { emoji: "👄 🍬", answer: "Pemanis mulut", options: ["Pemanis mulut", "Mulut manis", "Mulut murai", "Pencuci mulut"], meaning: "Makanan manis yang dimakan selepas makan malam/tengah hari." },
+            { emoji: "🦴 🪶", answer: "Ringan tulang", options: ["Berat tulang", "Ringan tulang", "Ringan tangan", "Tulang belakang"], meaning: "Orang yang rajin bekerja dan suka membantu." },
+            { emoji: "👂 🧱", answer: "Telinga nipis", options: ["Telinga lintah", "Pekak badak", "Telinga nipis", "Telinga kuali"], meaning: "Lekas marah atau cepat tersinggung." },
+            { emoji: "🐓 ⚽", answer: "Ayam tambatan", options: ["Kaki bangku", "Ayam tambatan", "Anak emas", "Juara bertahan"], meaning: "Orang yang menjadi harapan dalam sesuatu pasukan." },
+            { emoji: "🦿 🪑", answer: "Kaki bangku", options: ["Kaki ayam", "Kaki bangku", "Kaki botol", "Kaki sukan"], meaning: "Orang yang tidak pandai bermain bola." }
+        ];
+
+        // --- WEB AUDIO API SYSTEM ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.isMuted = false;
+                this.bgmInterval = null;
+                this.bgmStep = 0;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playJump() {
+                if (this.isMuted || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(160, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(450, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+
+            playCoin() {
+                if (this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(987.77, now);
+                osc.frequency.setValueAtTime(1318.51, now + 0.08);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playCorrect() {
+                if (this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + i * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.15);
+                });
+            }
+
+            playWrong() {
+                if (this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(170, now + 0.12);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.28);
+                osc.start(now);
+                osc.stop(now + 0.28);
+            }
+
+            playWin() {
+                if (this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const melody = [523.25, 523.25, 523.25, 659.25, 783.99, 1046.50];
+                melody.forEach((freq, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+                    gain.gain.setValueAtTime(0.15, now + i * 0.12);
+                    gain.gain.linearRampToValueAtTime(0.01, now + i * 0.12 + 0.2);
+                    osc.start(now + i * 0.12);
+                    osc.stop(now + i * 0.12 + 0.2);
+                });
+            }
+
+            startBGM() {
+                if (this.bgmInterval) return;
+                const melody = [261.63, 329.63, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
+                this.bgmInterval = setInterval(() => {
+                    if (this.isMuted || !this.ctx) return;
+                    const freq = melody[this.bgmStep % melody.length];
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.2);
+                    this.bgmStep++;
+                }, 250);
+            }
+
+            stopBGM() {
+                if (this.bgmInterval) {
+                    clearInterval(this.bgmInterval);
+                    this.bgmInterval = null;
+                }
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        function toggleAudio() {
+            sound.init();
+            sound.isMuted = !sound.isMuted;
+            const btn = document.getElementById('audioToggleBtn');
+            btn.innerText = sound.isMuted ? "🔇 Muzik: OFF" : "🔊 Muzik: ON";
+        }
+
+        // --- GAME ENGINE & VARIABLES ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let lives = 3;
+        let completedQuestions = 0;
+        let correctAnswersCount = 0;
+        let isGameRunning = false;
+        let isPaused = false;
+
+        const gravity = 0.5;
+        const groundY = 380;
+
+        // Player Character
+        const player = {
+            x: 50,
+            y: 300,
+            width: 32,
+            height: 42,
+            vx: 0,
+            vy: 0,
+            speed: 4.5,
+            jumpStrength: -11,
+            isGrounded: false,
+            color: '#38ef7d'
+        };
+
+        let chests = [];
+        let coins = [];
+        let particles = [];
+
+        const keys = { left: false, right: false };
+
+        function initWorld() {
+            chests = [];
+            coins = [];
+            particles = [];
+            const spacing = 600;
+
+            for (let i = 0; i < questionsData.length; i++) {
+                // Add Chest
+                chests.push({
+                    x: 450 + i * spacing,
+                    y: groundY - 40,
+                    width: 36,
+                    height: 36,
+                    questionIndex: i,
+                    opened: false
+                });
+
+                // Add Coins along the path
+                for (let c = 0; c < 4; c++) {
+                    coins.push({
+                        x: 220 + i * spacing + c * 50,
+                        y: groundY - 50 - Math.sin(c) * 30,
+                        radius: 9,
+                        collected: false
+                    });
+                }
+            }
+        }
+
+        // --- CONTROLS LISTENERS ---
+        window.addEventListener('keydown', (e) => {
+            sound.init();
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+            if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') && player.isGrounded && !isPaused && isGameRunning) {
+                player.vy = player.jumpStrength;
+                player.isGrounded = false;
+                sound.playJump();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        const bindTouch = (id, keyName) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); sound.init(); keys[keyName] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+            btn.addEventListener('mousedown', () => { sound.init(); keys[keyName] = true; });
+            btn.addEventListener('mouseup', () => { keys[keyName] = false; });
+        };
+
+        bindTouch('btnLeft', 'left');
+        bindTouch('btnRight', 'right');
+
+        document.getElementById('btnJump').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            sound.init();
+            if (player.isGrounded && !isPaused && isGameRunning) {
+                player.vy = player.jumpStrength;
+                player.isGrounded = false;
+                sound.playJump();
+            }
+        });
+
+        // --- PARTICLES CREATION ---
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    radius: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1
+                });
+            }
+        }
+
+        // --- GAME LOOP & UPDATES ---
+        function startGame() {
+            sound.init();
+            sound.startBGM();
+            document.getElementById('startModal').classList.add('hidden');
+            score = 0;
+            lives = 3;
+            completedQuestions = 0;
+            correctAnswersCount = 0;
+            player.x = 50;
+            player.y = groundY - player.height;
+            player.vx = 0;
+            player.vy = 0;
+            initWorld();
+            updateUI();
+            isGameRunning = true;
+            isPaused = false;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function restartGame() {
+            document.getElementById('endModal').classList.add('hidden');
+            startGame();
+        }
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').innerText = `🪙 ${score}`;
+            document.getElementById('livesDisplay').innerText = `❤️ ${lives}`;
+            document.getElementById('progressDisplay').innerText = `📦 ${completedQuestions}/10`;
+        }
+
+        function gameLoop() {
+            if (!isGameRunning) return;
+
+            if (!isPaused) {
+                updatePhysics();
+            }
+
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updatePhysics() {
+            // Horizontal movement
+            if (keys.left) player.vx = -player.speed;
+            else if (keys.right) player.vx = player.speed;
+            else player.vx = 0;
+
+            player.x += player.vx;
+            if (player.x < 10) player.x = 10;
+
+            // Gravity & Vertical movement
+            player.vy += gravity;
+            player.y += player.vy;
+
+            if (player.y >= groundY - player.height) {
+                player.y = groundY - player.height;
+                player.vy = 0;
+                player.isGrounded = true;
+            }
+
+            // Coin Collisions
+            coins.forEach(coin => {
+                if (!coin.collected && isCircleRectColliding(coin, player)) {
+                    coin.collected = true;
+                    score += 10;
+                    sound.playCoin();
+                    createParticles(coin.x, coin.y, '#f8b500', 8);
+                    updateUI();
+                }
+            });
+
+            // Chest Collisions
+            chests.forEach(chest => {
+                if (!chest.opened && isRectColliding(player, chest)) {
+                    triggerQuiz(chest);
+                }
+            });
+
+            // Particles update
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) particles.splice(index, 1);
+            });
+        }
+
+        function isRectColliding(r1, r2) {
+            return r1.x < r2.x + r2.width &&
+                   r1.x + r1.width > r2.x &&
+                   r1.y < r2.y + r2.height &&
+                   r1.y + r1.height > r2.y;
+        }
+
+        function isCircleRectColliding(circle, rect) {
+            let distX = Math.abs(circle.x - rect.x - rect.width/2);
+            let distY = Math.abs(circle.y - rect.y - rect.height/2);
+
+            if (distX > (rect.width/2 + circle.radius)) return false;
+            if (distY > (rect.height/2 + circle.radius)) return false;
+
+            if (distX <= (rect.width/2)) return true; 
+            if (distY <= (rect.height/2)) return true;
+
+            let dx = distX - rect.width/2;
+            let dy = distY - rect.height/2;
+            return (dx*dx + dy*dy <= (circle.radius * circle.radius));
+        }
+
+        // --- RENDERING ---
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            // Camera follow
+            let cameraX = -player.x + 180;
+            if (cameraX > 0) cameraX = 0;
+            ctx.translate(cameraX, 0);
+
+            // Sky Hills Background
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-100, 0, 7500, 450);
+
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(200, 400, 200, Math.PI, 0);
+            ctx.arc(800, 400, 250, Math.PI, 0);
+            ctx.arc(1600, 400, 220, Math.PI, 0);
+            ctx.arc(2400, 400, 260, Math.PI, 0);
+            ctx.fill();
+
+            // Ground
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(-100, groundY, 7500, 70);
+            ctx.fillStyle = '#38ef7d';
+            ctx.fillRect(-100, groundY, 7500, 8);
+
+            // Draw Coins
+            coins.forEach(coin => {
+                if (!coin.collected) {
+                    ctx.fillStyle = '#f8b500';
+                    ctx.beginPath();
+                    ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            // Draw Chests
+            chests.forEach(chest => {
+                if (chest.opened) {
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(chest.x, chest.y + 12, chest.width, chest.height - 12);
+                } else {
+                    ctx.fillStyle = '#f8b500';
+                    ctx.fillRect(chest.x, chest.y, chest.width, chest.height);
+                    ctx.fillStyle = '#b45309';
+                    ctx.fillRect(chest.x + 4, chest.y + 4, chest.width - 8, chest.height - 8);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 16px sans-serif';
+                    ctx.fillText('?', chest.x + 13, chest.y + 24);
+                }
+            });
+
+            // Draw Particles
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Draw Player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Player Eyes
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + (player.vx < 0 ? 5 : 18), player.y + 8, 8, 8);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(player.x + (player.vx < 0 ? 7 : 22), player.y + 10, 4, 4);
+
+            ctx.restore();
+        }
+
+        // --- QUIZ INTERACTION ---
+        function triggerQuiz(chest) {
+            isPaused = true;
+            const q = questionsData[chest.questionIndex];
+
+            document.getElementById('quizEmoji').innerText = q.emoji;
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(opt, q, chest);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quizModal').classList.remove('hidden');
+        }
+
+        function checkAnswer(selected, question, chest) {
+            document.getElementById('quizModal').classList.add('hidden');
+            chest.opened = true;
+
+            const isCorrect = (selected === question.answer);
+
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const meaningText = document.getElementById('meaningText');
+
+            if (isCorrect) {
+                score += 100;
+                correctAnswersCount++;
+                sound.playCorrect();
+                createParticles(chest.x + 18, chest.y + 18, '#38ef7d', 20);
+                feedbackTitle.innerText = "SYABAS, BETUL! 🎉";
+                feedbackTitle.style.color = "#38ef7d";
+                feedbackMessage.innerHTML = `Jawapan anda <strong>"${question.answer}"</strong> tepat sekali!`;
+            } else {
+                lives--;
+                sound.playWrong();
+                createParticles(chest.x + 18, chest.y + 18, '#ef4444', 20);
+                feedbackTitle.innerText = "KURANG TEPAT! ❌";
+                feedbackTitle.style.color = "#ef4444";
+                feedbackMessage.innerHTML = `Jawapan sebenar ialah <strong>"${question.answer}"</strong>.`;
+            }
+
+            meaningText.innerHTML = `<strong>${question.answer}</strong> bermaksud:<br><em>"${question.meaning}"</em>`;
+
+            completedQuestions++;
+            updateUI();
+
+            document.getElementById('feedbackModal').classList.remove('hidden');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+
+            if (lives <= 0) {
+                endGame(false);
+            } else if (completedQuestions >= questionsData.length) {
+                endGame(true);
+            } else {
+                isPaused = false;
+            }
+        }
+
+        function endGame(isVictory) {
+            isGameRunning = false;
+            sound.stopBGM();
+
+            const endModal = document.getElementById('endModal');
+            const endTitle = document.getElementById('endTitle');
+            const endMessage = document.getElementById('endMessage');
+            const finalBadge = document.getElementById('finalBadge');
+            const finalStats = document.getElementById('finalStats');
+
+            finalStats.innerText = `Jumlah Skor: ${score} | Jawapan Betul: ${correctAnswersCount}/10`;
+
+            if (isVictory && correctAnswersCount >= 8) {
+                sound.playWin();
+                endTitle.innerText = "TAHNIAH! 🏆";
+                endMessage.innerText = "Luar biasa! Anda telah menyelesaikan misi dengan sangat cemerlang!";
+                finalBadge.innerText = "Pakar Peribahasa 🥇";
+            } else if (isVictory) {
+                sound.playWin();
+                endTitle.innerText = "SYABAS! 👏";
+                endMessage.innerText = "Usaha yang bagus! Anda telah berjaya tamatkan pengembaraan.";
+                finalBadge.innerText = "Penjelajah Bahasa 🥈";
+            } else {
+                endTitle.innerText = "MISI GAGAL! 💔";
+                endMessage.innerText = "Nyawa anda telah habis. Jangan putus asa, cuba lagi!";
+                finalBadge.innerText = "Murid Gigih 📘";
+            }
+
+            endModal.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
